@@ -58,8 +58,12 @@ func NewLogger() *Sawmill {
 }
 
 // SetLevel ...
-func (l *Sawmill) SetLevel(level log.Level) {
-	l.logger.SetLevel(level)
+func (l *Sawmill) SetLevel(level string) {
+	ll, err := log.ParseLevel(level)
+	if err != nil {
+		ll = log.InfoLevel
+	}
+	l.logger.SetLevel(ll)
 }
 
 // IncludeGlobalFields ...
