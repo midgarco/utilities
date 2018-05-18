@@ -73,12 +73,26 @@ func (l *Sawmill) IncludeGlobalFields(f log.Fields) {
 	}
 }
 
+// WithField ...
+func (l Sawmill) WithField(key string, value interface{}) *log.Entry {
+	f := log.Fields{key: value}
+	for k, v := range l.fields {
+		f[k] = v
+	}
+	return l.logger.WithFields(f)
+}
+
 // WithFields ...
 func (l Sawmill) WithFields(f log.Fields) *log.Entry {
 	for k, v := range l.fields {
 		f[k] = v
 	}
 	return l.logger.WithFields(f)
+}
+
+// WithError ...
+func (l Sawmill) WithError(err error) *log.Entry {
+	return l.logger.WithError(err)
 }
 
 // Info ...
