@@ -5,12 +5,15 @@ import (
 	Lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
+// Fields ...
+type Fields map[string]interface{}
+
 // Logger interface
 type Logger interface {
-	IncludeGlobalFields(f log.Fields)
+	IncludeGlobalFields(f Fields)
 
 	WithField(key string, value interface{}) *log.Entry
-	WithFields(fields log.Fields) *log.Entry
+	WithFields(fields Fields) *log.Entry
 	WithError(err error) *log.Entry
 
 	Info(args ...interface{})
@@ -35,7 +38,7 @@ type Logger interface {
 // Sawmill ...
 type Sawmill struct {
 	logger *log.Logger
-	fields log.Fields
+	fields Fields
 }
 
 // NewFileLogger ...
@@ -47,14 +50,14 @@ func NewFileLogger(filename string, size, age int) *Sawmill {
 		MaxSize:  size,
 		MaxAge:   age,
 	}
-	return &Sawmill{logger, log.Fields{}}
+	return &Sawmill{logger, Fields{}}
 }
 
 // NewLogger ...
 func NewLogger() *Sawmill {
 	logger := log.New()
 	logger.Formatter = &log.JSONFormatter{}
-	return &Sawmill{logger, log.Fields{}}
+	return &Sawmill{logger, Fields{}}
 }
 
 // SetLevel ...
@@ -67,7 +70,7 @@ func (l *Sawmill) SetLevel(level string) {
 }
 
 // IncludeGlobalFields ...
-func (l *Sawmill) IncludeGlobalFields(f log.Fields) {
+func (l *Sawmill) IncludeGlobalFields(f Fields) {
 	for k, v := range f {
 		l.fields[k] = v
 	}
@@ -79,7 +82,7 @@ func (l Sawmill) WithField(key string, value interface{}) *log.Entry {
 	for k, v := range l.fields {
 		f[k] = v
 	}
-	return l.logger.WithFields(f)
+	return l.logger.WithFields(log.Fields(f))
 }
 
 // WithFields ...
@@ -87,7 +90,7 @@ func (l Sawmill) WithFields(f log.Fields) *log.Entry {
 	for k, v := range l.fields {
 		f[k] = v
 	}
-	return l.logger.WithFields(f)
+	return l.logger.WithFields(log.Fields(f))
 }
 
 // WithError ...
@@ -98,7 +101,7 @@ func (l Sawmill) WithError(err error) *log.Entry {
 // Info ...
 func (l Sawmill) Info(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Info(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Info(args...)
 	} else {
 		l.logger.Info(args...)
 	}
@@ -107,7 +110,7 @@ func (l Sawmill) Info(args ...interface{}) {
 // Infof ...
 func (l Sawmill) Infof(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Infof(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Infof(format, args...)
 	} else {
 		l.logger.Infof(format, args...)
 	}
@@ -116,7 +119,7 @@ func (l Sawmill) Infof(format string, args ...interface{}) {
 // Debug ...
 func (l Sawmill) Debug(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Debug(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Debug(args...)
 	} else {
 		l.logger.Debug(args...)
 	}
@@ -125,7 +128,7 @@ func (l Sawmill) Debug(args ...interface{}) {
 // Debugf ...
 func (l Sawmill) Debugf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Debugf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Debugf(format, args...)
 	} else {
 		l.logger.Debugf(format, args...)
 	}
@@ -134,7 +137,7 @@ func (l Sawmill) Debugf(format string, args ...interface{}) {
 // Warn ...
 func (l Sawmill) Warn(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Warn(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Warn(args...)
 	} else {
 		l.logger.Warn(args...)
 	}
@@ -143,7 +146,7 @@ func (l Sawmill) Warn(args ...interface{}) {
 // Warnf ...
 func (l Sawmill) Warnf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Warnf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Warnf(format, args...)
 	} else {
 		l.logger.Warnf(format, args...)
 	}
@@ -152,7 +155,7 @@ func (l Sawmill) Warnf(format string, args ...interface{}) {
 // Warning ...
 func (l Sawmill) Warning(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Warning(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Warning(args...)
 	} else {
 		l.logger.Warning(args...)
 	}
@@ -161,7 +164,7 @@ func (l Sawmill) Warning(args ...interface{}) {
 // Warningf ...
 func (l Sawmill) Warningf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Warningf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Warningf(format, args...)
 	} else {
 		l.logger.Warningf(format, args...)
 	}
@@ -170,7 +173,7 @@ func (l Sawmill) Warningf(format string, args ...interface{}) {
 // Error ...
 func (l Sawmill) Error(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Error(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Error(args...)
 	} else {
 		l.logger.Error(args...)
 	}
@@ -179,7 +182,7 @@ func (l Sawmill) Error(args ...interface{}) {
 // Errorf ...
 func (l Sawmill) Errorf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Errorf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Errorf(format, args...)
 	} else {
 		l.logger.Errorf(format, args...)
 	}
@@ -188,7 +191,7 @@ func (l Sawmill) Errorf(format string, args ...interface{}) {
 // Fatal ...
 func (l Sawmill) Fatal(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Fatal(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Fatal(args...)
 	} else {
 		l.logger.Fatal(args...)
 	}
@@ -197,7 +200,7 @@ func (l Sawmill) Fatal(args ...interface{}) {
 // Fatalf ...
 func (l Sawmill) Fatalf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Fatalf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Fatalf(format, args...)
 	} else {
 		l.logger.Fatalf(format, args...)
 	}
@@ -206,7 +209,7 @@ func (l Sawmill) Fatalf(format string, args ...interface{}) {
 // Print ...
 func (l Sawmill) Print(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Print(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Print(args...)
 	} else {
 		l.logger.Print(args...)
 	}
@@ -215,7 +218,7 @@ func (l Sawmill) Print(args ...interface{}) {
 // Printf ...
 func (l Sawmill) Printf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Printf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Printf(format, args...)
 	} else {
 		l.logger.Printf(format, args...)
 	}
@@ -224,7 +227,7 @@ func (l Sawmill) Printf(format string, args ...interface{}) {
 // Panic ...
 func (l Sawmill) Panic(args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Panic(args...)
+		l.logger.WithFields(log.Fields(l.fields)).Panic(args...)
 	} else {
 		l.logger.Panic(args...)
 	}
@@ -233,7 +236,7 @@ func (l Sawmill) Panic(args ...interface{}) {
 // Panicf ...
 func (l Sawmill) Panicf(format string, args ...interface{}) {
 	if len(l.fields) > 0 {
-		l.logger.WithFields(l.fields).Panicf(format, args...)
+		l.logger.WithFields(log.Fields(l.fields)).Panicf(format, args...)
 	} else {
 		l.logger.Panicf(format, args...)
 	}
