@@ -37,6 +37,7 @@ type Logger interface {
 
 // Sawmill ...
 type Sawmill struct {
+    mu     sync.Mutex
 	logger *log.Logger
 	fields Fields
 }
@@ -50,18 +51,20 @@ func NewFileLogger(filename string, size, age int) *Sawmill {
 		MaxSize:  size,
 		MaxAge:   age,
 	}
-	return &Sawmill{logger, Fields{}}
+	return &Sawmill{sync.Mutex{}, logger, Fields{}}
 }
 
 // NewLogger ...
 func NewLogger() *Sawmill {
 	logger := log.New()
 	logger.Formatter = &log.JSONFormatter{}
-	return &Sawmill{logger, Fields{}}
+	return &Sawmill{sync.Mutex{}, logger, Fields{}}
 }
 
 // SetLevel ...
 func (l *Sawmill) SetLevel(level string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	ll, err := log.ParseLevel(level)
 	if err != nil {
 		ll = log.InfoLevel
@@ -72,171 +75,209 @@ func (l *Sawmill) SetLevel(level string) {
 // IncludeGlobalFields ...
 func (l *Sawmill) IncludeGlobalFields(f Fields) {
 	for k, v := range f {
-		l.fields[k] = v
+		l.mu.Lock()
+		cl.fields[k] = v
+		l.mu.Unlock()
 	}
 }
 
 // WithField ...
-func (l Sawmill) WithField(key string, value interface{}) *log.Entry {
+func (l *Sawmill) WithField(key string, value interface{}) *log.Entry {
 	f := log.Fields{key: value}
-	for k, v := range l.fields {
+	for k, v := range cl.fields {
+		l.mu.Lock()
 		f[k] = v
+		l.mu.Unlock()
 	}
 	return l.logger.WithFields(log.Fields(f))
 }
 
 // WithFields ...
-func (l Sawmill) WithFields(f log.Fields) *log.Entry {
-	for k, v := range l.fields {
+func (l *Sawmill) WithFields(f Fields) *log.Entry {
+	for k, v := range cl.fields {
+		l.mu.Lock()
 		f[k] = v
+		l.mu.Unlock()
 	}
 	return l.logger.WithFields(log.Fields(f))
 }
 
 // WithError ...
-func (l Sawmill) WithError(err error) *log.Entry {
+func (l *Sawmill) WithError(err error) *log.Entry {
 	return l.logger.WithError(err)
 }
 
 // Info ...
-func (l Sawmill) Info(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Info(args...)
+func (l *Sawmill) Info(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Info(args...)
 	} else {
 		l.logger.Info(args...)
 	}
 }
 
 // Infof ...
-func (l Sawmill) Infof(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Infof(format, args...)
+func (l *Sawmill) Infof(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Infof(format, args...)
 	} else {
 		l.logger.Infof(format, args...)
 	}
 }
 
 // Debug ...
-func (l Sawmill) Debug(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Debug(args...)
+func (l *Sawmill) Debug(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Debug(args...)
 	} else {
 		l.logger.Debug(args...)
 	}
 }
 
 // Debugf ...
-func (l Sawmill) Debugf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Debugf(format, args...)
+func (l *Sawmill) Debugf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Debugf(format, args...)
 	} else {
 		l.logger.Debugf(format, args...)
 	}
 }
 
 // Warn ...
-func (l Sawmill) Warn(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Warn(args...)
+func (l *Sawmill) Warn(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Warn(args...)
 	} else {
 		l.logger.Warn(args...)
 	}
 }
 
 // Warnf ...
-func (l Sawmill) Warnf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Warnf(format, args...)
+func (l *Sawmill) Warnf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Warnf(format, args...)
 	} else {
 		l.logger.Warnf(format, args...)
 	}
 }
 
 // Warning ...
-func (l Sawmill) Warning(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Warning(args...)
+func (l *Sawmill) Warning(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Warning(args...)
 	} else {
 		l.logger.Warning(args...)
 	}
 }
 
 // Warningf ...
-func (l Sawmill) Warningf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Warningf(format, args...)
+func (l *Sawmill) Warningf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Warningf(format, args...)
 	} else {
 		l.logger.Warningf(format, args...)
 	}
 }
 
 // Error ...
-func (l Sawmill) Error(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Error(args...)
+func (l *Sawmill) Error(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Error(args...)
 	} else {
 		l.logger.Error(args...)
 	}
 }
 
 // Errorf ...
-func (l Sawmill) Errorf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Errorf(format, args...)
+func (l *Sawmill) Errorf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Errorf(format, args...)
 	} else {
 		l.logger.Errorf(format, args...)
 	}
 }
 
 // Fatal ...
-func (l Sawmill) Fatal(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Fatal(args...)
+func (l *Sawmill) Fatal(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Fatal(args...)
 	} else {
 		l.logger.Fatal(args...)
 	}
 }
 
 // Fatalf ...
-func (l Sawmill) Fatalf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Fatalf(format, args...)
+func (l *Sawmill) Fatalf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Fatalf(format, args...)
 	} else {
 		l.logger.Fatalf(format, args...)
 	}
 }
 
 // Print ...
-func (l Sawmill) Print(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Print(args...)
+func (l *Sawmill) Print(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Print(args...)
 	} else {
 		l.logger.Print(args...)
 	}
 }
 
 // Printf ...
-func (l Sawmill) Printf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Printf(format, args...)
+func (l *Sawmill) Printf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Printf(format, args...)
 	} else {
 		l.logger.Printf(format, args...)
 	}
 }
 
 // Panic ...
-func (l Sawmill) Panic(args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Panic(args...)
+func (l *Sawmill) Panic(args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Panic(args...)
 	} else {
 		l.logger.Panic(args...)
 	}
 }
 
 // Panicf ...
-func (l Sawmill) Panicf(format string, args ...interface{}) {
-	if len(l.fields) > 0 {
-		l.logger.WithFields(log.Fields(l.fields)).Panicf(format, args...)
+func (l *Sawmill) Panicf(format string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(cl.fields) > 0 {
+		l.logger.WithFields(log.Fields(cl.fields)).Panicf(format, args...)
 	} else {
 		l.logger.Panicf(format, args...)
 	}
