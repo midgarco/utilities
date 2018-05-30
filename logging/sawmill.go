@@ -74,30 +74,30 @@ func (l *Sawmill) SetLevel(level string) {
 
 // IncludeGlobalFields ...
 func (l *Sawmill) IncludeGlobalFields(f Fields) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for k, v := range f {
-		l.mu.Lock()
 		cl.fields[k] = v
-		l.mu.Unlock()
 	}
 }
 
 // WithField ...
 func (l *Sawmill) WithField(key string, value interface{}) *log.Entry {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	f := log.Fields{key: value}
 	for k, v := range cl.fields {
-		l.mu.Lock()
 		f[k] = v
-		l.mu.Unlock()
 	}
 	return l.logger.WithFields(log.Fields(f))
 }
 
 // WithFields ...
 func (l *Sawmill) WithFields(f Fields) *log.Entry {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for k, v := range cl.fields {
-		l.mu.Lock()
 		f[k] = v
-		l.mu.Unlock()
 	}
 	return l.logger.WithFields(log.Fields(f))
 }
