@@ -37,7 +37,7 @@ type Logger interface {
 
 // Sawmill ...
 type Sawmill struct {
-    mu     sync.Mutex
+    mu     *sync.Mutex
 	logger *log.Logger
 	fields Fields
 }
@@ -51,14 +51,14 @@ func NewFileLogger(filename string, size, age int) *Sawmill {
 		MaxSize:  size,
 		MaxAge:   age,
 	}
-	return &Sawmill{sync.Mutex{}, logger, Fields{}}
+	return &Sawmill{&sync.Mutex{}, logger, Fields{}}
 }
 
 // NewLogger ...
 func NewLogger() *Sawmill {
 	logger := log.New()
 	logger.Formatter = &log.JSONFormatter{}
-	return &Sawmill{sync.Mutex{}, logger, Fields{}}
+	return &Sawmill{&sync.Mutex{}, logger, Fields{}}
 }
 
 // SetLevel ...
@@ -77,7 +77,7 @@ func (l *Sawmill) IncludeGlobalFields(f Fields) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for k, v := range f {
-		cl.fields[k] = v
+		l.fields[k] = v
 	}
 }
 
@@ -86,7 +86,7 @@ func (l *Sawmill) WithField(key string, value interface{}) *log.Entry {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	f := log.Fields{key: value}
-	for k, v := range cl.fields {
+	for k, v := range l.fields {
 		f[k] = v
 	}
 	return l.logger.WithFields(log.Fields(f))
@@ -96,7 +96,7 @@ func (l *Sawmill) WithField(key string, value interface{}) *log.Entry {
 func (l *Sawmill) WithFields(f Fields) *log.Entry {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	for k, v := range cl.fields {
+	for k, v := range l.fields {
 		f[k] = v
 	}
 	return l.logger.WithFields(log.Fields(f))
@@ -111,8 +111,8 @@ func (l *Sawmill) WithError(err error) *log.Entry {
 func (l *Sawmill) Info(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Info(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Info(args...)
 	} else {
 		l.logger.Info(args...)
 	}
@@ -122,8 +122,8 @@ func (l *Sawmill) Info(args ...interface{}) {
 func (l *Sawmill) Infof(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Infof(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Infof(format, args...)
 	} else {
 		l.logger.Infof(format, args...)
 	}
@@ -133,8 +133,8 @@ func (l *Sawmill) Infof(format string, args ...interface{}) {
 func (l *Sawmill) Debug(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Debug(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Debug(args...)
 	} else {
 		l.logger.Debug(args...)
 	}
@@ -144,8 +144,8 @@ func (l *Sawmill) Debug(args ...interface{}) {
 func (l *Sawmill) Debugf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Debugf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Debugf(format, args...)
 	} else {
 		l.logger.Debugf(format, args...)
 	}
@@ -155,8 +155,8 @@ func (l *Sawmill) Debugf(format string, args ...interface{}) {
 func (l *Sawmill) Warn(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Warn(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Warn(args...)
 	} else {
 		l.logger.Warn(args...)
 	}
@@ -166,8 +166,8 @@ func (l *Sawmill) Warn(args ...interface{}) {
 func (l *Sawmill) Warnf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Warnf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Warnf(format, args...)
 	} else {
 		l.logger.Warnf(format, args...)
 	}
@@ -177,8 +177,8 @@ func (l *Sawmill) Warnf(format string, args ...interface{}) {
 func (l *Sawmill) Warning(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Warning(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Warning(args...)
 	} else {
 		l.logger.Warning(args...)
 	}
@@ -188,8 +188,8 @@ func (l *Sawmill) Warning(args ...interface{}) {
 func (l *Sawmill) Warningf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Warningf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Warningf(format, args...)
 	} else {
 		l.logger.Warningf(format, args...)
 	}
@@ -199,8 +199,8 @@ func (l *Sawmill) Warningf(format string, args ...interface{}) {
 func (l *Sawmill) Error(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Error(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Error(args...)
 	} else {
 		l.logger.Error(args...)
 	}
@@ -210,8 +210,8 @@ func (l *Sawmill) Error(args ...interface{}) {
 func (l *Sawmill) Errorf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Errorf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Errorf(format, args...)
 	} else {
 		l.logger.Errorf(format, args...)
 	}
@@ -221,8 +221,8 @@ func (l *Sawmill) Errorf(format string, args ...interface{}) {
 func (l *Sawmill) Fatal(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Fatal(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Fatal(args...)
 	} else {
 		l.logger.Fatal(args...)
 	}
@@ -232,8 +232,8 @@ func (l *Sawmill) Fatal(args ...interface{}) {
 func (l *Sawmill) Fatalf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Fatalf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Fatalf(format, args...)
 	} else {
 		l.logger.Fatalf(format, args...)
 	}
@@ -243,8 +243,8 @@ func (l *Sawmill) Fatalf(format string, args ...interface{}) {
 func (l *Sawmill) Print(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Print(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Print(args...)
 	} else {
 		l.logger.Print(args...)
 	}
@@ -254,8 +254,8 @@ func (l *Sawmill) Print(args ...interface{}) {
 func (l *Sawmill) Printf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Printf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Printf(format, args...)
 	} else {
 		l.logger.Printf(format, args...)
 	}
@@ -265,8 +265,8 @@ func (l *Sawmill) Printf(format string, args ...interface{}) {
 func (l *Sawmill) Panic(args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Panic(args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Panic(args...)
 	} else {
 		l.logger.Panic(args...)
 	}
@@ -276,8 +276,8 @@ func (l *Sawmill) Panic(args ...interface{}) {
 func (l *Sawmill) Panicf(format string, args ...interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if len(cl.fields) > 0 {
-		l.logger.WithFields(log.Fields(cl.fields)).Panicf(format, args...)
+	if len(l.fields) > 0 {
+		l.logger.WithFields(log.Fields(l.fields)).Panicf(format, args...)
 	} else {
 		l.logger.Panicf(format, args...)
 	}
