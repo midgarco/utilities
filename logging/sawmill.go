@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"sync"
+	
 	log "github.com/sirupsen/logrus"
 	Lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
@@ -37,7 +39,7 @@ type Logger interface {
 
 // Sawmill ...
 type Sawmill struct {
-    mu     *sync.Mutex
+    	mu     *sync.Mutex
 	logger *log.Logger
 	fields Fields
 }
